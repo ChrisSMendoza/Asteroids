@@ -1,0 +1,23 @@
+#ASTEROIDS (CLONE)
+
+#ship
+	class
+	shape (polygon)
+	have it move (rotate and move forward)
+		moving off screen has it appear on opposite side
+	show the thrust flame
+	allow firing
+	detect when it collides with an asteroid
+
+#bullets
+	class
+	draw them moving in direction
+	detect when they hit the asteroid
+
+#asteroids
+	class
+	have them spawn
+	have them move
+		moving off screen has it appear on opposite side
+	have them break when shot
+	limited number to end the round

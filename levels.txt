@@ -1,0 +1,7 @@
+//levels for asteroids
+//S, M, L : small, medium, large asteroids respectively
+
+L M
+L L M
+L L L 
+L L L L M
