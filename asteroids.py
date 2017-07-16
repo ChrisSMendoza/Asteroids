@@ -98,35 +98,6 @@ def adjust_screen_position(point_list):
 	point_list = adjust_bottom(point_list)
 	return point_list
 
-def set_level_from_file():
-	#open file
-	file = open("levels.txt", "r")
-	#read and skip lines
-	for line in file:
-
-		if line[0] in ("/", "\n"):
-			continue
-
-		else:
-			for size in line:
-				if size not in ("L", "M", "S"):
-					continue
-				if size == "L":
-					size = "large"
-				elif size == "M":
-					size = "medium"
-				elif size == "S":
-					size = "small"
-				ALL_ASTEROIDS.append(Asteroid(size))
-			break #only read the first line for testing
-
-	#for each letter make the appropriate asteroid
-
-	#add it to the global asteroids list
-
-	#yield function to get next line? or store current line?
-
-
 def get_rand(pos_number):
 	#grab a random floating point number from [-pos_number, pos_number]
 	rand = random.random() #rand within [0.0, 1.0)
@@ -294,6 +265,30 @@ class Bullet:
 		s_point = self.point_list[1]
 		pygame.draw.line(SCREEN, WHITE, f_point, s_point, BULLETWIDTH)
 
+class Levels:
+	def __init__(self, filename):
+		self.file = open(filename, "r") #open the levels file for reading
+
+	def set_next_level(self):
+		#read a line from the file and add asteroids to the global list
+		line = self.file.readline()
+
+		if line == "":
+			pass #user has completed all of the levels
+		sizes = line.split() #letters are seperated by whitespace
+
+		for size in sizes: #go through sizes list and add the asteroids
+		#for each letter make the appropriate asteroid
+			if size == "L":
+				size = "large"
+			elif size == "M":
+				size = "medium"
+			elif size == "S":
+				size = "small"
+			#add it to the global asteroids list
+			ALL_ASTEROIDS.append(Asteroid(size))
+
+
 class Ship:
 	def __init__(self):
 		self.center = (0, 0)
@@ -378,10 +373,9 @@ def main(): #program start here ----------
 	SCREEN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
 	pygame.display.set_caption("Asteroids")
 
-	ship = Ship()
-	#weird error where this asteroid 'instance' isnt in the list in .detect_collision()
-	#ALL_ASTEROIDS.append(Asteroid("large"))
-	set_level_from_file() #read the file and add the asteroids to the global list
+	levels = Levels("levels.txt") #read levels from file
+	ship = Ship() #create the ship
+	levels.set_next_level()
 
 	while True:
 		SCREEN.fill(BLACK)
@@ -405,9 +399,8 @@ def main(): #program start here ----------
 		if keys[K_UP]:
 			ship.accelerate()
 
-		ship.move()
+		ship.move() #clean up adjust_screen.. function
 		ship.point_list = adjust_screen_position(ship.point_list)
-		#make this a function, only change center after translation
 		ship.set_center()
 		ship.draw()
 		#work with a copy but delete from the original
@@ -418,6 +411,9 @@ def main(): #program start here ----------
 			asteroid.detect_collision(ship) #asteroids deleted here
 			asteroid.move()
 			asteroid.point_list = adjust_screen_position(asteroid.point_list)
+
+		if len(ALL_ASTEROIDS) == 0: #all asteroids were destroyed
+			levels.set_next_level() #go to the next level
 
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
