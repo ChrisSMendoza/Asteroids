@@ -8,10 +8,12 @@ Y = 1
 MIN = 0
 MAX = 1 #end of 'macros'
 FPS = 30
+FRICTION = 0.9
 WINWIDTH = 640
 WINHEIGHT = 480
 SHIPHEIGHT = 11
 SHIPWIDTH = 11
+ACCELERATION = 0.3
 BULLETWIDTH = 2 #the thickness of the bullets fired
 BULLETSPEED = 2 #multiplied to the bullet's direction vector
 DEG_TO_ROT = 5 #degrees that the ship is rotated when left or right is pressed
@@ -297,8 +299,7 @@ class Ship:
 		self.center = (0, 0)
 		self.point_list = self.get_points([WINWIDTH / 2, WINHEIGHT / 2])
 		self.lives = 3
-		self.change_x = 0
-		self.change_y = 0
+		self.velocity = 0
 		self.bullets = [] #each bullet fired is stored here
 		self.deg_to_rotate = 5 #ship is rotated this with arrow keys
 		self.acceleration = 0 #increases as up is held
@@ -315,12 +316,11 @@ class Ship:
 		#vector from the back of the ship to the front
 		return [front[X] - back[X], front[Y] - back[Y]]
 
-	def get_points(self, tip): #@tip: where the ship's tip is located
+	def get_points(self, tip): # @tip: where the ship's tip is located
 		points = [tip,]
 		points.append([tip[X] + 5, tip[Y] + 10])
 		points.append([tip[X], tip[Y] + 6])
 		points.append([tip[X] - 5, tip[Y] + 10])
-		self.center = [tip[X], tip[Y] + 5]
 		return points
 
 	def draw(self):
@@ -331,15 +331,20 @@ class Ship:
 			bullet.draw()
 			bullet.move() #bullets continously move until off the screen
 
-	def move_forward(self):
+	def accelerate(self):
+		self.velocity += ACCELERATION
+
+	def move(self):
 		direction = self.get_direction()
 		
 		for i in range(len(self.point_list)):
-			self.point_list[i][X] += direction[X]
-			self.point_list[i][Y] += direction[Y]
-		#move the center as well 
-		self.center[X] += direction[X]
-		self.center[Y] += direction[Y]
+			self.point_list[i][X] += (direction[X] * self.velocity)
+			self.point_list[i][Y] += (direction[Y] * self.velocity)
+		#move the center as well
+		self.set_center() 
+		self.velocity *= FRICTION #always slow down after moving
+		# self.center[X] += direction[X]
+		# self.center[Y] += direction[Y]
 
 	def rotate(self, theta):
 		rad = math.radians(theta) #get the radians equivalent
@@ -355,6 +360,15 @@ class Ship:
 			self.point_list[i][X] = (x * c) + (y * -s) + upterm
 			self.point_list[i][Y] = (x * s) + (y * c) + downterm
 
+	def set_center(self): # relative to ship placed like this: ^
+		front = self.point_list[0] #center is behind the front of the ship
+		# right_back = self.point_list[1]
+		# left_back = self.point_list[3]
+
+		# x = right_back[X] - left_back[X]
+		# y = front[Y] - right_back[Y]
+		# self.center = [x, y]
+		self.center = [front[X], front[Y] + 5]
 
 def main(): #program start here ----------
 	global FPSCLOCK, SCREEN
@@ -389,27 +403,24 @@ def main(): #program start here ----------
 			ship.rotate(ship.deg_to_rotate)
 
 		if keys[K_UP]:
-			ship.move_forward()
+			ship.accelerate()
 
+		ship.move()
 		ship.point_list = adjust_screen_position(ship.point_list)
 		#make this a function, only change center after translation
-		ship.center = [ship.point_list[0][X], ship.point_list[0][Y] + 5]
+		ship.set_center()
 		ship.draw()
 		#work with a copy but delete from the original
 		all_asteroids_cpy = ALL_ASTEROIDS
 
 		for asteroid in all_asteroids_cpy:
 			asteroid.draw()
-			asteroid.detect_collision(ship)
+			asteroid.detect_collision(ship) #asteroids deleted here
 			asteroid.move()
 			asteroid.point_list = adjust_screen_position(asteroid.point_list)
 
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
-
-
-
-
 
 
 
