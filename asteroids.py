@@ -105,7 +105,7 @@ def get_rand(pos_number):
 	rand -= pos_number #rand in the right range
 	return rand
 
-#----- CLASSES ------------------------------------
+#----- CLASSES ----------------------------------------------------------------
 
 class Asteroid:
 	def __init__(self, sz, start=None):
@@ -134,12 +134,13 @@ class Asteroid:
 			ALL_ASTEROIDS.remove(self)
 
 	def detect_collision(self, ship):
-		#check if a bullet or the ship has collided
+		#check if a bullet or the ship has collided with current asteroid
 		for point in ship.point_list:
 			#check to see if any point from the object is in the asteroid
 			if self.within_rect(point):
 				self.split_up()
-				pass #game_over() goes here
+				ship.lives -= 1 #ship collided, life lost
+				print ship.lives
 
 		for i, bullet in enumerate(ship.bullets):
 			for point in bullet.point_list:
