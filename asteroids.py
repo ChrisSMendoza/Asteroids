@@ -140,7 +140,6 @@ class Asteroid:
 			if self.within_rect(point):
 				self.split_up()
 				ship.lives -= 1 #ship collided, life lost
-				print ship.lives
 
 		for i, bullet in enumerate(ship.bullets):
 			for point in bullet.point_list:
@@ -209,6 +208,7 @@ class Asteroid:
 			self.point_list[i][X] += (self.direction[X] * ASTEROIDSPEED)
 			self.point_list[i][Y] += (self.direction[Y] * ASTEROIDSPEED)
 
+		self.point_list = adjust_screen_position(self.point_list)
 		self.set_rectangle_values() #inner rectangle needs to move too
 
 	def set_rectangle_values(self):
@@ -336,6 +336,8 @@ class Ship:
 		for i in range(len(self.point_list)):
 			self.point_list[i][X] += (direction[X] * self.velocity)
 			self.point_list[i][Y] += (direction[Y] * self.velocity)
+
+		self.point_list = adjust_screen_position(self.point_list)
 		#move the center as well
 		self.set_center() 
 		self.velocity *= FRICTION #always slow down after moving
@@ -401,7 +403,6 @@ def main(): #program start here ----------
 			ship.accelerate()
 
 		ship.move() #clean up adjust_screen.. function
-		ship.point_list = adjust_screen_position(ship.point_list)
 		ship.set_center()
 		ship.draw()
 		#work with a copy but delete from the original
@@ -411,7 +412,6 @@ def main(): #program start here ----------
 			asteroid.draw()
 			asteroid.detect_collision(ship) #asteroids deleted here
 			asteroid.move()
-			asteroid.point_list = adjust_screen_position(asteroid.point_list)
 
 		if len(ALL_ASTEROIDS) == 0: #all asteroids were destroyed
 			levels.set_next_level() #go to the next level
