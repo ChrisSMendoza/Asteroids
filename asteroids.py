@@ -16,11 +16,11 @@ SHIPWIDTH = 11
 ACCELERATION = 0.3
 BULLETWIDTH = 2 #the thickness of the bullets fired
 BULLETSPEED = 2 #multiplied to the bullet's direction vector
-DEG_TO_ROT = 5 #degrees that the ship is rotated when left or right is pressed
+DEG_TO_ROT = 6 #degrees that the ship is rotated when left or right is pressed
 ASTEROIDSPEED = 6
 ASTEROIDSIZES = ("small", "medium", "large")
 
-ALL_ASTEROIDS = []
+ALL_ASTEROIDS = [] #global list where asteroids
 
 #-- colors
 TRANSPARENT = (255, 255, 255, 0) 
@@ -104,6 +104,16 @@ def get_rand(pos_number):
 	rand *= (pos_number * 2) #rand within [0.0, 2pos_number]
 	rand -= pos_number #rand in the right range
 	return rand
+
+def start_new_game(ship, levels):
+	#display "game over"
+
+	#reset ship lives
+	ship.lives = 3
+	#start levels from the beginning
+	levels.restart()
+	levels.set_next_level()
+	#start the game or exit the game
 
 #----- CLASSES ----------------------------------------------------------------
 
@@ -270,6 +280,10 @@ class Levels:
 	def __init__(self, filename):
 		self.file = open(filename, "r") #open the levels file for reading
 
+	def restart(self):
+		#read from the beginning of the file again
+		self.file.seek(0) 
+
 	def set_next_level(self):
 		#read a line from the file and add asteroids to the global list
 		line = self.file.readline()
@@ -368,7 +382,13 @@ class Ship:
 		# self.center = [x, y]
 		self.center = [front[X], front[Y] + 5]
 
-def main(): #program start here ----------
+def game_quit(event):
+	#check for the window being closed or escape key pressed
+	return ((event.type == QUIT)
+				or
+			(event.type == KEYUP) and (event.key == K_ESCAPE))
+#---------------- program start here -------------------------
+def main(): 
 	global FPSCLOCK, SCREEN
 	pygame.init()
 
@@ -379,13 +399,14 @@ def main(): #program start here ----------
 	levels = Levels("levels.txt") #read levels from file
 	ship = Ship() #create the ship
 	levels.set_next_level()
+	gameStarted = False #when true, everything is drawn. used to start and pause game
 
 	while True:
 		SCREEN.fill(BLACK)
 
 		for event in pygame.event.get():
 
-			if event.type == QUIT:
+			if game_quit(event):
 				pygame.quit()
 				sys.exit()
 
@@ -393,6 +414,12 @@ def main(): #program start here ----------
 				ship.fire()
 		#check continously pressed keys for ship movement 
 		keys = pygame.key.get_pressed()
+
+		if keys[K_SPACE]:
+			gameStarted = True #player started the game
+
+		if not gameStarted:
+			continue #space hasnt been pressed, show main menu / pause menu
 
 		if keys[K_LEFT]:
 			ship.rotate(-ship.deg_to_rotate)
@@ -418,7 +445,6 @@ def main(): #program start here ----------
 
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
-
 
 
 if __name__ == '__main__':
