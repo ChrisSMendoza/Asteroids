@@ -419,14 +419,13 @@ class Ship:
 			self.point_list[i][Y] = (x * s) + (y * c) + downterm
 
 	def set_center(self): # relative to ship placed like this: ^
-		front = self.point_list[0] #center is behind the front of the ship
-		# right_back = self.point_list[1]
-		# left_back = self.point_list[3]
+		front = self.point_list[0]
+		back = self.point_list[2]
+		#the center is halfway between the front and back on both axis
+		x = (front[X] + back[X]) / 2
+		y = (front[Y] + back[Y]) / 2
 
-		# x = right_back[X] - left_back[X]
-		# y = front[Y] - right_back[Y]
-		# self.center = [x, y]
-		self.center = [front[X], front[Y] + 5]
+		self.center = [x, y]
 
 def game_quit(event):
 	#check for the window being closed or escape key pressed
