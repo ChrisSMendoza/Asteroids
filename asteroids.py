@@ -3,10 +3,11 @@ from pygame.locals import *
 
 
 #- GLOBALS ---
-X = 0 #constants have no underscores
+X = 0
 Y = 1
 MIN = 0
 MAX = 1 #end of 'macros'
+
 FPS = 30
 FRICTION = 0.9
 WINWIDTH = 640
@@ -20,15 +21,18 @@ DEG_TO_ROT = 6 #degrees that the ship is rotated when left or right is pressed
 ASTEROIDSPEED = 6
 ASTEROIDSIZES = ("small", "medium", "large")
 
-ALL_ASTEROIDS = [] #global list where asteroids
-
-#-- colors
+#-- colors ---------------
 TRANSPARENT = (255, 255, 255, 0) 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+BLUE = (0, 0, 100)
 RED = (255, 0, 0)
 
-#--------- functions
+#these change throughout the game
+ALL_ASTEROIDS = [] #global list where asteroids are stored
+pause = False #tells the game if it's paused or not
+
+#--------- functions -----
 def adjust_top(point_list):
 	#check the object's points and move the object if it's off the screen
 	adjusted_points = [] #new set of points to account for the screen wrapping
@@ -104,6 +108,46 @@ def get_rand(pos_number):
 	rand *= (pos_number * 2) #rand within [0.0, 2pos_number]
 	rand -= pos_number #rand in the right range
 	return rand
+
+def paused():
+	global pause #set to false to unpause the game
+	continueButton = Button("Continue", WHITE, BLACK, (280, (WINHEIGHT / 2)))
+	quitButton = Button("Quit", WHITE, BLACK, (360, (WINHEIGHT / 2)))
+
+	#place the buttons on the screen
+	SCREEN.blit(continueButton.surface, continueButton.rect)
+	SCREEN.blit(quitButton.surface, quitButton.rect)
+
+	while pause: #global @pause set to True when 'p' key is pressed
+		for event in pygame.event.get():
+			
+			if event.type == pygame.MOUSEBUTTONUP: #mouse was clicked
+
+				if continueButton.clicked():
+					pause = False; #unpause
+				elif quitButton.clicked():
+					pygame.quit() #quit the entire game
+					sys.exit()
+
+		#SCREEN.fill(BLUE) #clear the screen in blue while it's paused
+		pygame.display.update()
+		FPSCLOCK.tick(FPS)
+			
+
+
+class Button:
+	def __init__(self, text, textColor, backColor, start):
+		self.text = pygame.font.Font('freesansbold.ttf', 32) #text object
+		#surface to render the text
+		self.surface = self.text.render(text, True, textColor, backColor)
+		#rectangle to check position
+		self.rect = self.surface.get_rect(center=start) 
+
+	def clicked(self):
+		mousePos = pygame.mouse.get_pos() #where the cursor is currently
+		#check if the mouse is within the button
+		return self.rect.collidepoint(mousePos) 
+
 
 def start_new_game(ship, levels):
 	#display "game over"
@@ -276,6 +320,8 @@ class Bullet:
 		s_point = self.point_list[1]
 		pygame.draw.line(SCREEN, WHITE, f_point, s_point, BULLETWIDTH)
 
+
+
 class Levels:
 	def __init__(self, filename):
 		self.file = open(filename, "r") #open the levels file for reading
@@ -306,13 +352,13 @@ class Levels:
 
 class Ship:
 	def __init__(self):
-		self.center = (0, 0)
+		self.center = (0, 0) #have a center variable from the beginning
 		self.point_list = self.get_points([WINWIDTH / 2, WINHEIGHT / 2])
 		self.lives = 3
 		self.velocity = 0
 		self.bullets = [] #each bullet fired is stored here
-		self.deg_to_rotate = 5 #ship is rotated this with arrow keys
-		self.acceleration = 0 #increases as up is held
+		self.deg_to_rotate = 5 #rotate the ship this much with arrow keys
+		self.acceleration = 0 #increases as up key is held
 
 	def fire(self):
 		#make bullet for drawing and check if it collides with asteroids
@@ -389,7 +435,7 @@ def game_quit(event):
 			(event.type == KEYUP) and (event.key == K_ESCAPE))
 #---------------- program start here -------------------------
 def main(): 
-	global FPSCLOCK, SCREEN
+	global FPSCLOCK, SCREEN, pause
 	pygame.init()
 
 	FPSCLOCK = pygame.time.Clock() #to control the frames per second
@@ -399,7 +445,6 @@ def main():
 	levels = Levels("levels.txt") #read levels from file
 	ship = Ship() #create the ship
 	levels.set_next_level()
-	gameStarted = False #when true, everything is drawn. used to start and pause game
 
 	while True:
 		SCREEN.fill(BLACK)
@@ -410,16 +455,17 @@ def main():
 				pygame.quit()
 				sys.exit()
 
-			elif (event.type == KEYUP) and (event.key == K_SPACE):
-				ship.fire()
+			elif event.type == KEYUP: #a keyboard key was pressed / released
+
+				if event.key == K_SPACE: #space bar fires a bullet
+					ship.fire()
+
+				elif event.key == K_p: #pause the game
+					pause = True
+					paused()
+
 		#check continously pressed keys for ship movement 
 		keys = pygame.key.get_pressed()
-
-		if keys[K_SPACE]:
-			gameStarted = True #player started the game
-
-		if not gameStarted:
-			continue #space hasnt been pressed, show main menu / pause menu
 
 		if keys[K_LEFT]:
 			ship.rotate(-ship.deg_to_rotate)
