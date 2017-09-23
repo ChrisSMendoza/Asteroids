@@ -30,7 +30,7 @@ RED = (255, 0, 0)
 
 #these change throughout the game
 ALL_ASTEROIDS = [] #global list where asteroids are stored
-pause = False #tells the game if it's paused or not
+PAUSE = False #tells the game if it's paused or not
 
 #--------- functions -----
 def adjust_top(point_list):
@@ -110,7 +110,7 @@ def get_rand(pos_number):
 	return rand
 
 def paused():
-	global pause #set to false to unpause the game
+	global PAUSE #set to false to unpause the game
 	continueButton = Button("Continue", WHITE, BLACK, (280, (WINHEIGHT / 2)))
 	quitButton = Button("Quit", WHITE, BLACK, (360, (WINHEIGHT / 2)))
 
@@ -118,13 +118,13 @@ def paused():
 	SCREEN.blit(continueButton.surface, continueButton.rect)
 	SCREEN.blit(quitButton.surface, quitButton.rect)
 
-	while pause: #global @pause set to True when 'p' key is pressed
+	while PAUSE: #global @pause set to True when 'p' key is pressed
 		for event in pygame.event.get():
 			
 			if event.type == pygame.MOUSEBUTTONUP: #mouse was clicked
 
 				if continueButton.clicked():
-					pause = False; #unpause
+					PAUSE = False; #unpause
 				elif quitButton.clicked():
 					pygame.quit() #quit the entire game
 					sys.exit()
@@ -435,7 +435,7 @@ def game_quit(event):
 			(event.type == KEYUP) and (event.key == K_ESCAPE))
 #---------------- program start here -------------------------
 def main(): 
-	global FPSCLOCK, SCREEN, pause
+	global FPSCLOCK, SCREEN, PAUSE
 	pygame.init()
 
 	FPSCLOCK = pygame.time.Clock() #to control the frames per second
@@ -460,8 +460,8 @@ def main():
 				if event.key == K_SPACE: #space bar fires a bullet
 					ship.fire()
 
-				elif event.key == K_p: #pause the game
-					pause = True
+				elif event.key == K_p: #PAUSE the game
+					PAUSE = True
 					paused()
 
 		#check continously pressed keys for ship movement 
