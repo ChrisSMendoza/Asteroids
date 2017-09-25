@@ -147,6 +147,18 @@ def start_new_game(ship, levels):
 	levels.set_next_level()
 	#start the game or exit the game
 
+def within_screen(points):
+	num_points_in = 0
+
+	for point in points: 
+
+		if ((0 <= point[X]) and (point[X] <= WINWIDTH)
+			and 
+			(0 <= point[Y]) and (point[Y] <= WINHEIGHT)):
+			num_points_in += 1
+
+	return num_points_in == len(points)
+
 #----- CLASSES ----------------------------------------------------------------
 
 class Asteroid:
@@ -282,13 +294,13 @@ class Asteroid:
 		(self.y_rect_vals[MIN] <= point[Y]) and
 		(point[Y] <= self.y_rect_vals[MAX]))
 
+
 class Bullet:
 	def __init__(self, start, dir): 
 		#pass in the starting point and the direction vector
 		#direction vector is twice the needed length
 		self.direction = ((dir[X] / 2), (dir[Y] / 2))
 		#use a copy of the ship's front coordinates
-		#self.f_point = [start[X], start[Y]] changed
 		f_x, f_y = start #first x and y 
 		self.point_list = [[f_x, f_y], ]
 		self.point_list.append([f_x + self.direction[X], 
@@ -301,10 +313,6 @@ class Bullet:
 			self.point_list[i][Y] += (self.direction[Y] * BULLETSPEED)
 
 	def draw(self):
-		#add the direction vector to the first point to get the second point
-		# s_x = self.f_point[X] + self.direction[X] Changed
-		# s_y = self.f_point[Y] + self.direction[Y]
-		# s_point = [s_x, s_y]
 		f_point = self.point_list[0] #first and second point
 		s_point = self.point_list[1]
 		pygame.draw.line(SCREEN, WHITE, f_point, s_point, BULLETWIDTH)
@@ -403,9 +411,12 @@ class Ship:
 		#draw the ship and any bullets fired
 		pygame.draw.polygon(SCREEN, WHITE, self.point_list, 1)
 
-		for bullet in self.bullets:
+		for i, bullet in enumerate(self.bullets):
 			bullet.draw()
 			bullet.move() #bullets continously move until off the screen
+
+			if not within_screen(bullet.point_list):
+				del self.bullets[i] #dont need to keep track of this bullet
 
 	def accelerate(self):
 		self.velocity += ACCELERATION
