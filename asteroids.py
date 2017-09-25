@@ -295,8 +295,7 @@ class Bullet:
 								f_y + self.direction[Y]])
 
 	def move(self):
-		# self.f_point[X] += (self.direction[X] * BULLETSPEED)
-		# self.f_point[Y] += (self.direction[Y] * BULLETSPEED)
+
 		for i in range(len(self.point_list)):
 			self.point_list[i][X] += (self.direction[X] * BULLETSPEED)
 			self.point_list[i][Y] += (self.direction[Y] * BULLETSPEED)
@@ -310,6 +309,19 @@ class Bullet:
 		s_point = self.point_list[1]
 		pygame.draw.line(SCREEN, WHITE, f_point, s_point, BULLETWIDTH)
 
+
+class Button:
+	def __init__(self, text, textColor, backColor, start):
+		self.text = pygame.font.Font('freesansbold.ttf', 32) #text object
+		#surface to render the text
+		self.surface = self.text.render(text, True, textColor, backColor)
+		#rectangle to check position
+		self.rect = self.surface.get_rect(center=start) 
+
+	def clicked(self):
+		mousePos = pygame.mouse.get_pos() #where the cursor is currently
+		#check if the mouse is within the button
+		return self.rect.collidepoint(mousePos) 
 
 
 class Levels:
@@ -340,20 +352,6 @@ class Levels:
 			ALL_ASTEROIDS.append(Asteroid(size))
 
 
-class Button:
-	def __init__(self, text, textColor, backColor, start):
-		self.text = pygame.font.Font('freesansbold.ttf', 32) #text object
-		#surface to render the text
-		self.surface = self.text.render(text, True, textColor, backColor)
-		#rectangle to check position
-		self.rect = self.surface.get_rect(center=start) 
-
-	def clicked(self):
-		mousePos = pygame.mouse.get_pos() #where the cursor is currently
-		#check if the mouse is within the button
-		return self.rect.collidepoint(mousePos) 
-
-
 class Ship:
 	def __init__(self):
 		self.center = (0, 0) #have a center variable from the beginning
@@ -367,6 +365,13 @@ class Ship:
 	def blow_up(self):
 		pass
 		#destroy the ship, each side moves in a separate direction
+
+		#rotate each line
+			#make rotation based on line (it's center, just it's points)
+			#adjust rotate function
+
+		#dont allow player to rotate ship
+
 		#grab each line
 
 		#display the lines
@@ -413,11 +418,9 @@ class Ship:
 			self.point_list[i][Y] += (direction[Y] * self.velocity)
 
 		self.point_list = adjust_screen_position(self.point_list)
-		#move the center as well
-		self.set_center() 
+		
+		self.set_center() #move the center as well
 		self.velocity *= FRICTION #always slow down after moving
-		# self.center[X] += direction[X]
-		# self.center[Y] += direction[Y]
 
 	def rotate(self, direction):
 		theta = self.deg_to_rotate #rotate clockwise as default
@@ -425,18 +428,21 @@ class Ship:
 		if direction == "counterclock":
 			theta = -self.deg_to_rotate 
 
+		self.set_rotated_points(theta, self.center, self.point_list)
+
+	def set_rotated_points(self, theta, center, points):
 		rad = math.radians(theta) #get the radians equivalent
 		c = math.cos(rad)
 		s = math.sin(rad)
 
-		upterm = self.center[X] * (1 - c) + self.center[Y] * s
-		downterm = self.center[Y] * (1 - c) - self.center[X] * s
+		upterm = center[X] * (1 - c) + center[Y] * s
+		downterm = center[Y] * (1 - c) - center[X] * s
 
-		for i in range(len(self.point_list)):
-			x, y = self.point_list[i] #the old x,y values for calculations
+		for i in range(len(points)):
+			x, y = points[i] #the old x,y values for calculations
 
-			self.point_list[i][X] = (x * c) + (y * -s) + upterm
-			self.point_list[i][Y] = (x * s) + (y * c) + downterm
+			points[i][X] = (x * c) + (y * -s) + upterm
+			points[i][Y] = (x * s) + (y * c) + downterm
 
 	def set_center(self):
 		front = self.point_list[0]
