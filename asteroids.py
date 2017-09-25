@@ -6,8 +6,7 @@ from pygame.locals import *
 X = 0
 Y = 1
 MIN = 0
-MAX = 1 #end of 'macros'
-
+MAX = 1
 FPS = 30
 FRICTION = 0.9
 WINWIDTH = 640
@@ -102,10 +101,16 @@ def adjust_screen_position(point_list):
 	point_list = adjust_bottom(point_list)
 	return point_list
 
+def game_quit(event):
+	#check for the window being closed or escape key pressed
+	return ((event.type == QUIT)
+				or
+			(event.type == KEYUP) and (event.key == K_ESCAPE))
+
 def get_rand(pos_number):
 	#grab a random floating point number from [-pos_number, pos_number]
 	rand = random.random() #rand within [0.0, 1.0)
-	rand *= (pos_number * 2) #rand within [0.0, 2pos_number]
+	rand *= (pos_number * 2) #rand within [0.0, (2)(pos_number)]
 	rand -= pos_number #rand in the right range
 	return rand
 
@@ -129,26 +134,9 @@ def paused():
 					pygame.quit() #quit the entire game
 					sys.exit()
 
-		#SCREEN.fill(BLUE) #clear the screen in blue while it's paused
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
 			
-
-
-class Button:
-	def __init__(self, text, textColor, backColor, start):
-		self.text = pygame.font.Font('freesansbold.ttf', 32) #text object
-		#surface to render the text
-		self.surface = self.text.render(text, True, textColor, backColor)
-		#rectangle to check position
-		self.rect = self.surface.get_rect(center=start) 
-
-	def clicked(self):
-		mousePos = pygame.mouse.get_pos() #where the cursor is currently
-		#check if the mouse is within the button
-		return self.rect.collidepoint(mousePos) 
-
-
 def start_new_game(ship, levels):
 	#display "game over"
 
@@ -189,11 +177,13 @@ class Asteroid:
 
 	def detect_collision(self, ship):
 		#check if a bullet or the ship has collided with current asteroid
+
 		for point in ship.point_list:
 			#check to see if any point from the object is in the asteroid
-			if self.within_rect(point):
-				self.split_up()
-				ship.lives -= 1 #ship collided, life lost
+			if self.within_rect(point): #ship and asteroid collided
+				#break the ship, remove a ship image from the lives display
+				self.split_up() #asteroid breaks into smaller ones
+				ship.lives -= 1 #player has on less life
 
 		for i, bullet in enumerate(ship.bullets):
 			for point in bullet.point_list:
@@ -202,7 +192,7 @@ class Asteroid:
 					if bullet in ship.bullets: 
 						del ship.bullets[i] #bullet disappears as it hits the asteroid
 					self.split_up() #break into more asteroids
-					break #one point hit the asteroid, don't check the other
+					break #one point hit the asteroid, don't check the others
 		
 	def draw(self):
 		pygame.draw.polygon(SCREEN, WHITE, self.point_list, 1)
@@ -350,6 +340,20 @@ class Levels:
 			ALL_ASTEROIDS.append(Asteroid(size))
 
 
+class Button:
+	def __init__(self, text, textColor, backColor, start):
+		self.text = pygame.font.Font('freesansbold.ttf', 32) #text object
+		#surface to render the text
+		self.surface = self.text.render(text, True, textColor, backColor)
+		#rectangle to check position
+		self.rect = self.surface.get_rect(center=start) 
+
+	def clicked(self):
+		mousePos = pygame.mouse.get_pos() #where the cursor is currently
+		#check if the mouse is within the button
+		return self.rect.collidepoint(mousePos) 
+
+
 class Ship:
 	def __init__(self):
 		self.center = (0, 0) #have a center variable from the beginning
@@ -359,6 +363,17 @@ class Ship:
 		self.bullets = [] #each bullet fired is stored here
 		self.deg_to_rotate = 5 #rotate the ship this much with arrow keys
 		self.acceleration = 0 #increases as up key is held
+
+	def blow_up(self):
+		pass
+		#destroy the ship, each side moves in a separate direction
+		#grab each line
+
+		#display the lines
+
+		#move the lines for a short time
+
+		#place the ship back together
 
 	def fire(self):
 		#make bullet for drawing and check if it collides with asteroids
@@ -404,7 +419,12 @@ class Ship:
 		# self.center[X] += direction[X]
 		# self.center[Y] += direction[Y]
 
-	def rotate(self, theta):
+	def rotate(self, direction):
+		theta = self.deg_to_rotate #rotate clockwise as default
+
+		if direction == "counterclock":
+			theta = -self.deg_to_rotate 
+
 		rad = math.radians(theta) #get the radians equivalent
 		c = math.cos(rad)
 		s = math.sin(rad)
@@ -418,7 +438,7 @@ class Ship:
 			self.point_list[i][X] = (x * c) + (y * -s) + upterm
 			self.point_list[i][Y] = (x * s) + (y * c) + downterm
 
-	def set_center(self): # relative to ship placed like this: ^
+	def set_center(self):
 		front = self.point_list[0]
 		back = self.point_list[2]
 		#the center is halfway between the front and back on both axis
@@ -427,12 +447,7 @@ class Ship:
 
 		self.center = [x, y]
 
-def game_quit(event):
-	#check for the window being closed or escape key pressed
-	return ((event.type == QUIT)
-				or
-			(event.type == KEYUP) and (event.key == K_ESCAPE))
-#---------------- program start here -------------------------
+#---------------- program starts here -------------------------
 def main(): 
 	global FPSCLOCK, SCREEN, PAUSE
 	pygame.init()
@@ -444,6 +459,8 @@ def main():
 	levels = Levels("levels.txt") #read levels from file
 	ship = Ship() #create the ship
 	levels.set_next_level()
+	#image of the ship to display the number of lives 
+	#livesSurf = pygame.image.load('ship_img.png')
 
 	while True:
 		SCREEN.fill(BLACK)
@@ -459,23 +476,22 @@ def main():
 				if event.key == K_SPACE: #space bar fires a bullet
 					ship.fire()
 
-				elif event.key == K_p: #PAUSE the game
-					PAUSE = True
+				elif event.key == K_p: #'p' key pauses the game
+					PAUSE = True 
 					paused()
 
 		#check continously pressed keys for ship movement 
 		keys = pygame.key.get_pressed()
 
 		if keys[K_LEFT]:
-			ship.rotate(-ship.deg_to_rotate)
+			ship.rotate("counterclock")
 		elif keys[K_RIGHT]:
-			ship.rotate(ship.deg_to_rotate)
+			ship.rotate("clockwise")
 
 		if keys[K_UP]:
 			ship.accelerate()
 
-		ship.move() #clean up adjust_screen.. function
-		ship.set_center()
+		ship.move()
 		ship.draw()
 		#work with a copy but delete from the original
 		all_asteroids_cpy = ALL_ASTEROIDS
