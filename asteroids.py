@@ -138,7 +138,7 @@ def paused():
 		FPSCLOCK.tick(FPS)
 			
 def start_new_game(ship, levels):
-	#display "game over"
+	#display "game over": NOT IMPLEMENTED
 
 	#reset ship lives
 	ship.lives = 3
@@ -157,7 +157,7 @@ def within_screen(points):
 			(0 <= point[Y]) and (point[Y] <= WINHEIGHT)):
 			num_points_in += 1
 
-	return num_points_in == len(points)
+	return (num_points_in == len(points))
 
 #----- CLASSES ----------------------------------------------------------------
 
@@ -228,6 +228,8 @@ class Asteroid:
 		elif size == "small":
 			self.make_small()
 
+		self.set_rectangle_values() #set collision box around asteroid
+
 	def make_large(self):
 		f_x, f_y = self.point_list[0] #first x,y coordinates
 		offsets = ((6, 2), (10, 6), (12, 12), (8, 13), (10, 15), (14, 18), 
@@ -237,8 +239,6 @@ class Asteroid:
 		for offset in offsets:
 			self.point_list.append([f_x + offset[X], f_y + offset[Y]])
 
-		self.set_rectangle_values()
-
 	def make_medium(self):
 		f_x, f_y = self.point_list[0]
 		offsets = ((4, 10), (2, 14), ((-3), 11), (-6, 16), (-10, 14),
@@ -247,16 +247,12 @@ class Asteroid:
 		for offset in offsets:
 			self.point_list.append([(f_x + offset[X]), (f_y + offset[Y])])
 
-		self.set_rectangle_values()
-
 	def make_small(self):
 		f_x, f_y = self.point_list[0]
 		offsets = ((3, 4), (5, 0), (6, 8), (1, 9), ((-4), 4))
 
 		for offset in offsets:
 			self.point_list.append([f_x + offset[X], f_y + offset[Y]])
-
-		self.set_rectangle_values()
 
 	def move(self):
 		#move the asteroid in its stored direction
@@ -268,13 +264,14 @@ class Asteroid:
 		self.set_rectangle_values() #inner rectangle needs to move too
 
 	def set_rectangle_values(self):
-
+		#not dynamic mins / max, but the shapes of the rocks are fine..
 		if self.size == "medium":
 			indices = (6, 2, 0, 4)
 		elif self.size == "large":
 			indices = (12, 6, 0, 8)
 		elif self.size == "small":
 			indices = (0, 1, 2, 3)
+
 		#set min, max x,y values for collision detecting rectangle
 		left = self.point_list[indices[0]] #left most point (x min)
 		right = self.point_list[indices[1]] #right most point (x max)
@@ -471,7 +468,7 @@ def main():
 
 	FPSCLOCK = pygame.time.Clock() #to control the frames per second
 	SCREEN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
-	pygame.display.set_caption("Asteroids")
+	pygame.display.set_caption("Asteroids | Cloned by Chris Mendoza")
 
 	levels = Levels("levels.txt") #read levels from file
 	ship = Ship() #create the ship
